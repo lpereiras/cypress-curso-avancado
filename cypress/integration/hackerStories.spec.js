@@ -2,7 +2,10 @@ describe('Hacker Stories', () => {
   beforeEach(() => {
     cy.visit('/')
 
-    cy.assertLoadingIsShownAndHidden()
+    cy.intercept('GET', '**/search?query=React&page=0').as('getSearch')
+
+    // cy.assertLoadingIsShownAndHidden()
+    cy.wait('@getSearch')
     cy.contains('More').should('be.visible')
   })
 
