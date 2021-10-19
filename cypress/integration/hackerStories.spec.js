@@ -60,42 +60,6 @@ describe('Hacker Stories', () => {
       cy.get(`button:contains(${newTerm})`)
         .should('be.visible')
     })
-
-    it('types and clicks the submit button', () => {
-      cy.get('#search')
-        .clear()
-        .type(newTerm)
-      cy.contains('Submit')
-        .click()
-
-      cy.wait('@getNewTermStories')
-
-      cy.get('.item').should('have.length', 20)
-      cy.get('.item')
-        .first()
-        .should('contain', newTerm)
-      cy.get(`button:contains(${initialTerm})`)
-        .should('be.visible')
-    })
-
-    it('shows a max of 5 buttons for the last searched terms', () => {
-      const faker = require('faker')
-
-      cy.intercept(
-        'GET',
-        '**/search**'
-      ).as('getRandomStories')
-      // a busca pelo **/search**, valida qualquer elemento é encontrado
-      Cypress._.times(6, () => {
-        cy.get('#search')
-          .clear()
-          .type(`${faker.random.word()}{enter}`)
-      })
-      cy.wait('@getRandomStories')
-
-      cy.get('.last-searches button')
-        .should('have.length', 5)
-    })
   })
 
   context('mocking the API', () => {
@@ -117,19 +81,30 @@ describe('Hacker Stories', () => {
       })
 
       context('List of stories', () => {
-        // Since the API is external,
-        // I can't control what it will provide to the frontend,
-        // and so, how can I assert on the data?
-        // This is why this test is being skipped.
-        // TODO: Find a way to test it out.
-        it.skip('shows the right data for all rendered stories', () => {})
+        it.only('shows the right data for all rendered stories', () => {
+          const stories = require('../fixtures/stories')
+          cy.get('.item')
+            .eq(0)
+            .should('contain', stories.hits[0].title)
+            .and('contain', stories.hits[0].author)
+            .and('contain', stories.hits[0].num_comments)
+          cy.get(`.item a:contains(${stories.hits[0].title})`)
+            .should('have.attr', 'href', stories.hits[0].url)
+
+          cy.get('.item')
+            .eq(1)
+            .should('contain', stories.hits[1].title)
+            .and('contain', stories.hits[1].author)
+            .and('contain', stories.hits[1].num_comments)
+          cy.get(`.item a:contains(${stories.hits[1].title})`)
+            .should('have.attr', 'href', stories.hits[1].url)
+        })
       })
 
       it('shows the less one story after dimissing the first one', () => {
         cy.get('.button-small')
           .first()
           .click()
-
         cy.get('.item').should('have.length', 1)
       })
 
@@ -177,7 +152,41 @@ describe('Hacker Stories', () => {
         cy.get('.item').should('have.length', 2)
         cy.get(`button:contains(${initialTerm})`)
           .should('be.visible')
-      })    
+      })   
+      
+      it('types and clicks the submit button', () => {
+        cy.get('#search')
+          .clear()
+          .type(newTerm)
+        cy.contains('Submit')
+          .click()
+  
+        cy.wait('@getStories')
+  
+        cy.get('.item').should('have.length', 2)
+        cy.get(`button:contains(${initialTerm})`)
+          .should('be.visible')
+      })
+      
+      it('shows a max of 5 buttons for the last searched terms', () => {
+        const faker = require('faker')
+  
+        cy.intercept(
+          'GET',
+          '**/search**',
+          { fixture: 'empty' }
+        ).as('getRandomStories')
+        // a busca pelo **/search**, valida qualquer elemento é encontrado
+        Cypress._.times(6, () => {
+          cy.get('#search')
+            .clear()
+            .type(`${faker.random.word()}{enter}`)
+          cy.wait('@getRandomStories')
+          })
+        
+        cy.get('.last-searches button')
+          .should('have.length', 5)
+      })
     })
   })
 })
