@@ -81,7 +81,7 @@ describe('Hacker Stories', () => {
       })
 
       context('List of stories', () => {
-        it.only('shows the right data for all rendered stories', () => {
+        it('shows the right data for all rendered stories', () => {
           const stories = require('../fixtures/stories')
           cy.get('.item')
             .eq(0)
@@ -108,19 +108,40 @@ describe('Hacker Stories', () => {
         cy.get('.item').should('have.length', 1)
       })
 
-      // Since the API is external,
-      // I can't control what it will provide to the frontend,
-      // and so, how can I test ordering?
-      // This is why these tests are being skipped.
-      // TODO: Find a way to test them out.
-      context.skip('Order by', () => {
+      context('Order by', () => {
+        const stories = require('../fixtures/stories')
         it('orders by title', () => {})
 
-        it('orders by author', () => {})
+        it('orders by author', () => {
+          cy.get('.list-header-button:contains(Author)')
+            .click()
 
-        it('orders by comments', () => {})
+          cy.get('.item')
+            .first()
+            .should('be.visible')
+            .and('contain', stories.hits[0].num_comments)
 
-        it('orders by points', () => {})
+        })
+
+        it('orders by comments', () => {
+          cy.get('.list-header-button:contains(Comments)')
+            .click()
+
+          cy.get('.item')
+            .first()
+            .should('be.visible')
+            .and('contain', stories.hits[0].points)
+        })
+
+        it('orders by points', () => {
+          cy.get('.list-header-button:contains(Points)')
+            .click()
+
+          cy.get('.item')
+            .first()
+            .should('be.visible')
+            .and('contain', stories.hits[1].points)
+        })
       })
     })
 
