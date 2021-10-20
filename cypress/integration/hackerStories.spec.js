@@ -223,6 +223,7 @@ describe('Hacker Stories', () => {
           cy.wait('@getRandomStories')
         })
 
+        //util quando o seletor solicitado é muito extenso
         cy.get('.last-searches')
           .within(() => {
             cy.get('button')
