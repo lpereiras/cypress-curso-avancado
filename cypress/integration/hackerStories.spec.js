@@ -51,11 +51,17 @@ describe('Hacker Stories', () => {
 
       cy.wait('@getNewTermStories')
 
+      cy.getLocalStorage('search')
+        .should('be.equal', newTerm)
+
       cy.get(`button:contains(${initialTerm})`)
         .should('be.visible')
         .click()
 
       cy.wait('@getStories')
+
+      cy.getLocalStorage('search')
+        .should('be.equal', initialTerm)
 
       cy.get('.item').should('be.visible')
         .and('have.length', 20)
@@ -68,7 +74,7 @@ describe('Hacker Stories', () => {
   })
 
   context('mocking the API', () => {
-    context('footer and list of stories', () => {
+    context('footer, list of stories and order by', () => {
       beforeEach(() => {
         cy.intercept(
           'GET',
@@ -187,6 +193,9 @@ describe('Hacker Stories', () => {
 
         cy.wait('@getStories')
 
+        cy.getLocalStorage('search')
+          .should('be.equal', newTerm)
+
         cy.get('.item').should('be.visible')
           .and('have.length', 2)
         cy.get(`button:contains(${initialTerm})`)
@@ -202,6 +211,9 @@ describe('Hacker Stories', () => {
 
         cy.wait('@getStories')
 
+        cy.getLocalStorage('search')
+          .should('be.equal', newTerm)
+
         cy.get('.item').should('have.length', 2)
         cy.get(`button:contains(${initialTerm})`)
           .should('be.visible')
@@ -215,15 +227,19 @@ describe('Hacker Stories', () => {
           '**/search**',
           { fixture: 'empty' }
         ).as('getRandomStories')
-        // a busca pelo **/search**, valida qualquer elemento é encontrado
         Cypress._.times(6, () => {
+          const randomWord = faker.random.word()
+
           cy.get('#search')
             .clear()
-            .type(`${faker.random.word()}{enter}`)
+            .type(`${randomWord}{enter}`)
           cy.wait('@getRandomStories')
+
+          cy.getLocalStorage('search')
+            .should('be.equal', randomWord)
         })
 
-        //util quando o seletor solicitado é muito extenso
+        // util quando o seletor solicitado é muito extenso
         cy.get('.last-searches')
           .within(() => {
             cy.get('button')
@@ -261,5 +277,25 @@ context('Errors', () => {
 
     cy.get('p:contains(Something went wrong ...)')
       .should('be.visible')
+  })
+})
+
+context('delay simulation', () => {
+  it('shows a "Loading ..." state before showing the results', () => {
+    cy.intercept(
+      'GET',
+      '**/search**',
+      {
+        delay: 2000,
+        fixture: 'stories'
+      }
+    ).as('getDelayedStories')
+  
+    cy.visit('/')
+  
+    cy.assertLoadingIsShownAndHidden()
+    cy.wait('@getDelayedStories')
+  
+    cy.get('.item').should('have.length', 2)
   })
 })
